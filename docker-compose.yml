@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  magic:
+    image: mageai/mageai:latest
+    env_file:
+      - .env
+    environment:
+      USER_CODE_PATH: /root/Mage_AI
+      PROJECT_NAME: ${PROJECT_NAME:-Mage_AI}
+      GIT_USERNAME: ${GIT_USERNAME}
+      GIT_EMAIL: ${GIT_EMAIL}
+      GIT_ACCESS_TOKEN: ${GIT_ACCESS_TOKEN}
+    ports:
+      - "6789:6789"
+    volumes:
+      # Mount current directory directly to /root/Mage_AI in container
+      - .:/root/Mage_AI
+      - ~/.ssh:/root/.ssh:ro
+    working_dir: /root/Mage_AI
+    command: >
+      sh -c "
+        if [ ! -z \"$$GIT_USERNAME\" ] && [ ! -z \"$$GIT_ACCESS_TOKEN\" ]; then
+          git config --global user.name \"$$GIT_USERNAME\" &&
+          git config --global user.email \"$$GIT_EMAIL\" &&
+          git config --global credential.helper store &&
+          echo \"https://$$GIT_USERNAME:$$GIT_ACCESS_TOKEN@github.com\" > /root/.git-credentials
+        fi &&
+        mage start .
+      "
